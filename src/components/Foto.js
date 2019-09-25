@@ -59,10 +59,41 @@ class FotoInfo extends Component {
 }
 
 class FotoAtualizacoes extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { likeada: this.props.foto.likeada };
+  }
+  like(event) {
+    fetch(
+      `http://localhost:8080/api/fotos/${
+        this.props.foto.id
+      }/like?X-AUTH-TOKEN=${localStorage.getItem("auth-token")}`,
+      { method: "POST" }
+    )
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("não foi possível realizar o like da foto");
+        }
+      })
+      .then(liker => {
+        this.setState({ likeada: !this.state.likeada });
+      });
+  }
   render() {
     return (
       <section className="fotoAtualizacoes">
-        <Link className="fotoAtualizacoes-like">Likar</Link>
+        <Link
+          onClick={this.like.bind(this)}
+          className={
+            this.state.likeada
+              ? "fotoAtualizacoes-like-ativo"
+              : "fotoAtualizacoes-like"
+          }
+        >
+          Linkar
+        </Link>
         <form className="fotoAtualizacoes-form">
           <input
             type="text"
@@ -89,7 +120,7 @@ export class FotoItem extends Component {
         <img alt="foto" className="foto-src" src={this.props.foto.urlFoto} />
 
         <FotoInfo foto={this.props.foto}></FotoInfo>
-        <FotoAtualizacoes></FotoAtualizacoes>
+        <FotoAtualizacoes foto={this.props.foto}></FotoAtualizacoes>
       </div>
     );
   }
