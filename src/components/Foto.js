@@ -22,7 +22,10 @@ class Header extends Component {
 class FotoInfo extends Component {
   constructor(props) {
     super(props);
-    this.state = { likers: this.props.foto.likers };
+    this.state = {
+      likers: this.props.foto.likers,
+      comentarios: this.props.foto.comentarios
+    };
   }
   componentWillMount() {
     Pubsub.subscribe("atualiza-liker", (topico, infoLiker) => {
@@ -39,6 +42,15 @@ class FotoInfo extends Component {
           );
           this.setState({ likers: novosLikers });
         }
+      }
+    });
+
+    Pubsub.subscribe("novos-comentarios", (topico, infoComentario) => {
+      if (this.props.foto.id === infoComentario.fotoId) {
+        const novosComentarios = this.state.comentarios.concat(
+          infoComentario.novoComentario
+        );
+        this.setState({ comentarios: novosComentarios });
       }
     });
   }
@@ -62,14 +74,14 @@ class FotoInfo extends Component {
         </p>
 
         <ul className="foto-info-comentarios">
-          {this.props.foto.comentarios.map(comentario => {
+          {this.state.comentarios.map(comentario => {
             return (
               <li className="comentario" key={comentario.id}>
                 <Link
                   to={`/timeline/${comentario.login}`}
                   className="foto-info-autor"
                 >
-                  {comentario.login}
+                  {comentario.login}{" "}
                 </Link>
                 {comentario.texto}
               </li>
@@ -105,6 +117,36 @@ class FotoAtualizacoes extends Component {
         Pubsub.publish("atualiza-liker", { fotoId: this.props.foto.id, liker });
       });
   }
+  comenta(event) {
+    event.preventDefault();
+    const requestInfo = {
+      method: "POST",
+      body: JSON.stringify({ texto: this.comentario.value }),
+      headers: new Headers({
+        "Content-type": "application/json"
+      })
+    };
+
+    fetch(
+      `http://localhost:8080/api/fotos/${
+        this.props.foto.id
+      }/comment?X-AUTH-TOKEN=${localStorage.getItem("auth-token")}`,
+      requestInfo
+    )
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("não foi possível comentar");
+        }
+      })
+      .then(novoComentario => {
+        Pubsub.publish("novo-comentarios", {
+          fotoId: this.props.foto.id,
+          novoComentario
+        });
+      });
+  }
   render() {
     return (
       <section className="fotoAtualizacoes">
@@ -118,11 +160,15 @@ class FotoAtualizacoes extends Component {
         >
           Linkar
         </Link>
-        <form className="fotoAtualizacoes-form">
+        <form
+          className="fotoAtualizacoes-form"
+          onSubmit={this.comenta.bind(this)}
+        >
           <input
             type="text"
             placeholder="Adicione um comentário..."
             className="fotoAtualizacoes-form-campo"
+            ref={input => (this.comentario = input)}
           />
           <input
             type="submit"
