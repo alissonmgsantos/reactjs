@@ -8,10 +8,15 @@ import * as serviceWorker from "./serviceWorker";
 import Login from "./components/Login";
 import { Router, Route, browserHistory } from "react-router";
 
+function verificaAutenticacao(nextStage, replace) {
+  if (localStorage.getItem("auth-token") == null) {
+    replace("/");
+  }
+}
 ReactDOM.render(
   <Router history={browserHistory}>
     <Route path="/" component={Login} />
-    <Route path="/timeline" component={App} />
+    <Route path="/timeline" component={App} onEnter={verificaAutenticacao} />
   </Router>,
   document.getElementById("root")
 );
