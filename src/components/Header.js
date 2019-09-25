@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-
+import { Link } from "react-router";
 export default class Header extends Component {
   render() {
     return (
@@ -19,10 +19,10 @@ export default class Header extends Component {
         <nav>
           <ul className="header-nav">
             <li className="header-nav-item">
-              <a href="#">
+              <Link>
                 ♡{/* <!--                 ♥--> */}
                 {/* <!--Quem deu like nas minhas fotos?--> */}
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>
